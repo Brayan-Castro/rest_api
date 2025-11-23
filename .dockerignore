@@ -1,6 +1,6 @@
 .gitignore
-/__pycache__
-/modules/__pycache__
-/venv
+__pycache__/
+modules/__pycache__
+venv/
 *.txt
 readme.md

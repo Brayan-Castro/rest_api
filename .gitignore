@@ -1,6 +1,8 @@
 *.env
 /venv
 /__pycache__
+/modules/__pycache__
 /db-data
 /modules/db-injector.py
 teste.py
+*.txt

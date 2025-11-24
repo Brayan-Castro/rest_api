@@ -35,7 +35,7 @@ This endpoint has several uses, it accepts (but not obligatory) a JSON Payload c
 Requires both a JSON Payload and a JWT with admin acess, this endpoint tries to delete from the database the user specified inside the JSON Payload.
 
 #### /api/users/<int:id> [GET] [DELETE]
-Requires both a JSON Payload and a JWT with admin acess, if used with a [GET] request, returns used data with the associated id, if used with a [DELETE] request, tries to delete the user with the associated id.
+Requires both a JSON Payload and a JWT with admin acess, if used with a [GET] request, returns user data with the associated id, if used with a [DELETE] request, tries to delete the user with the associated id.
 
 ### /nuke
 Nukes the database table (FOR TESTING PURPOSES)

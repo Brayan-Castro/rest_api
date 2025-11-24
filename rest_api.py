@@ -29,6 +29,7 @@ Endpoints
     /api/users
     /api/users/<id>
     /auth/login
+    /auth/register
 """
 
 def main():
@@ -179,6 +180,5 @@ def check_cookie(cookie, acess_req):
 def check_identity(cookie, id):
     token = jwt.decode(cookie['jwt_token'], jwt_secret, algorithms='HS256')
     return f'{database.check_identity(token['name'])}'
-
 
 main()

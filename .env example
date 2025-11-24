@@ -1,0 +1,6 @@
+MYSQL_HOST = 'docker file database service name / database server ip'
+MYSQL_USER = 'your super cool username'
+MYSQL_PASSWORD = 'your super secure password'
+MYSQL_DATABASE = 'your database name'
+MYSQL_ROOT_PASSWORD = 'your super secure root password'
+JWT_SECRET = 'your super secure token'

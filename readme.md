@@ -54,3 +54,6 @@ There can only be one sudo on the database, and only he can create other admins
 ### JSON Payload
 This is a sample payload accepted by the API:
 {'name': 'user1', 'passwd': '123', 'acesso': 'admin'}
+
+### Testing
+After this project is concluded (or almost) it will be provided a python file for testing / presentation purposes using Python Requests (this is the reason requests is listed in the requirements.txt)

@@ -45,7 +45,7 @@ Recreates the database table (FOR TESTING PURPOSES)
 
 ## Other
 ### Acess Level Permissions
-Sudo > Admin > User
+Sudo > Admin > User \n
 There can only be one sudo on the database, and only he can create other admins
 
 ### HTTP Responses

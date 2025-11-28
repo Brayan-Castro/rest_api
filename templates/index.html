@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESTful? API</title>
+</head>
+<body>
+    <div style="position: fixed; background-color: rgb(226, 226, 226); padding: 0; margin: 0; top: 0%; left: 50%; transform: translateX(-50%); border-bottom: 1px solid black; width: 100%; height: 70px;">
+        <h1 style="display: flex; align-content: center; justify-content: center; margin: 0; padding: 0; margin-top: 10px;">
+            RESTful? API
+        </h1>
+    </div>
+    <div style="max-width: 800px; margin-top: 100px;">
+        <p>
+            <b>Hello!</b> This is my REST API that technically isn't a REST API.<br>
+            While this is indeed an API with it's own endpoints, this API relies on session cookies for authentication and authorization.
+        </p>
+        <h3>
+            Why?
+        </h3>
+        <p>
+            I made this API simply because:
+            <ol>
+                <li>I like thinkering with User authentication;</li>
+                <li>I like backend;</li>
+                <li>I wanted to see if i was capable of making one, even if simple and without a practical use case.</li>
+            </ol>
+        </p>
+        <h3>
+            (Theorical) Use Case
+        </h3>
+        <p>
+            I think, this <i>could</i> be used on a internal network to manage user data (like a <b>CRUD</b> with extra steps). Since it uses a working login system<br>
+            (with cookies for user sessions and JWT to secure the cookies), i think it could also be used as base for a blog API.
+        </p>
+        <h3>
+            Endpoints
+        </h3>
+        <p>
+            The API doesn't have a lot of endpoints (realistically, it's only 2), they are as follows:
+            <ul>
+                <li>/api/users</li>
+                <li>/api/users/id</li>
+                <li>/auth/register</li>
+                <li>/auth/login</li>
+            </ul>
+        </p>
+        <h4>
+            /api/users [GET]
+        </h4>
+        <p>
+            This endpoint has several uses, it accepts (but not obligatory) a JSON Payload containing name and password, 
+            it may also require the JWT Cookie; Sending a [GET] request with no JSON Payload returns all the user data inside the database but requires 
+            a JWT Cookie with admin acess level, sending a [GET] request with a JSON Payload returns only the data associated with the name and password in the JSON 
+            and doesn't require a JWT Cookie.
+        </p>
+        <h4>
+            /api/users [DELETE]
+        </h4>
+        <p>
+            Requires both a JSON Payload and a JWT with admin acess, this endpoint tries to delete from the database the user specified inside the JSON Payload.
+        </p>
+        <h4>
+            /api/users/id [GET] [DELETE]
+        </h4>
+        <p>
+            Requires both a JSON Payload and a JWT with admin acess, if used with a [GET] request, returns user data with the associated id, if used with a [DELETE] request,
+             tries to delete the user with the associated id.
+        </p>
+        <h4>
+            /auth/register [POST]
+        </h4>
+        <p>
+            Used for user/admin/sudo registration, requires a JSON Payload with name, password and acess level,
+             additionaly, may require a JWT Cookie with sudo acess level for creating admins.
+        </p>
+        <h4>
+            /auth/login [GET]
+        </h4>
+        <p>
+            As the name implies it's used for login, returns a JWT Encoded cookie containing name and acess level,
+             this cookie lasts until session expires and may be saved and sent back as Authentication for other endpoints
+        </p>
+        <h4>
+            /nuke
+        </h4>
+        <p>Nukes the database table (FOR TESTING PURPOSES)</p>
+        <h4>
+            /create
+        </h4>
+        <p>Recreates the database table (FOR TESTING PURPOSES)</p>
+
+        <h3>
+            How does security, authentication and authorization works?
+        </h3>
+        <p>
+            The uses Acess Level Security to make endpoints secure, the acess levels are:
+            <ol>
+                <li>Sudo</li>
+                <li>Admin</li>
+                <li>User</li>
+            </ol>
+            There can only be one Sudo user at the same time (created, not logged-in), and only he can manage admins (create and remove), admins can only manage users, and users can only manage themselves
+            When you send a JSON to register a user, you must send the acess level of that user, and when you log-in, a JWT Cookie will be created, you then can send this cookie to the endpoints 
+            (that accepted it) to verify you permission level, user acounts are unique (only one email per account) and passwords are hashed and salted with bcrypt;
+        </p>
+        <h3>Sample login / register JSON</h3>
+        <p>
+            {
+                'name': 'cool email',
+                'passwd': 'cool passwd'
+                'acesso': 'user'
+            }
+        </p>
+    </div>
+</body>
+</html>

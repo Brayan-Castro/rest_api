@@ -31,7 +31,6 @@ def create_table():
 
 @sec.hash_passwd
 def create_user(name:str, passwd:str, acesso:str):
-    # /users with [POST]
     with sql_connection() as con:
         with con.cursor() as cur:
             cur.execute(f'SELECT username FROM {_TABLE_NAME} where username = %s', (name))
@@ -62,7 +61,17 @@ def remove_user(name:str = '', passwd:str = '', id:int= 0):
                 else:
                     raise ValueError('User not found')
 
-def see_user(id = 0, name = '', passwd = ''):
+@sec.check_hash       
+def login_user(name:str, passwd:str):
+    with sql_connection() as con:
+        with con.cursor() as cur:
+            cur.execute(f'SELECT id FROM {_TABLE_NAME} WHERE username = %s AND password = %s', (name, passwd))
+            if type(cur.fetchone()) != type(None):
+                return True
+            else:
+                return False
+
+def return_user_data(id = 0, name = '', passwd = ''):
     with sql_connection() as con:
         with pymysql.cursors.DictCursor(con) as cur:
             if id:
@@ -100,13 +109,15 @@ def get_password(name:str):
             else:
                 return passwd
 
-def check_identity(name):
+@sec.check_id
+def check_id(*args):
+    name = args[0]
     with sql_connection() as con:
         with con.cursor() as cur:
             cur.execute(f'SELECT id FROM {_TABLE_NAME} WHERE username = %s', (name))
             return cur.fetchone()
                 
-def check_sudo():
+def check_sudo_existence():
     with sql_connection() as con:
         with con.cursor() as cur:
             cur.execute(f'SELECT username FROM {_TABLE_NAME} WHERE acesso = %s', ('sudo'))
@@ -116,7 +127,7 @@ def check_sudo():
             else:
                 return True
             
-def check_acess(name:str):
+def check_acess_level(name:str):
     with sql_connection() as con:
         with con.cursor() as cur:
             cur.execute(f'SELECT acesso FROM {_TABLE_NAME} WHERE username = %s', (name))

@@ -1,4 +1,4 @@
-from flask import Flask, Response, make_response, jsonify
+from flask import Flask, Response, make_response, jsonify, render_template
 from flask import request
 import modules.db_manager as database
 import modules.status as status_code
@@ -6,8 +6,8 @@ import modules.user_manager as sec
 import jwt
 from dotenv import load_dotenv
 import os
-import datetime
 load_dotenv()
+
 app = Flask(__name__)
 jwt_secret = os.getenv('JWT_SECRET')
 """
@@ -35,7 +35,11 @@ Endpoints
 """
 
 def main():
-    @app.route("/api/users", methods=['GET', 'DELETE']) #type: ignore
+    @app.route('/')
+    def index():
+        return render_template('index.html')
+    
+    @app.route("/api/users", methods=['GET', 'DELETE'])
     def return_users():
         try:
             data = request.json
@@ -52,7 +56,7 @@ def main():
             except NameError:
                 if sec.check_cookie(request.cookies, 'admin'):
                     try:
-                        return jsonify(database.see_user())
+                        return jsonify(database.return_user_data())
                     except ValueError:
                         return Response('Database is Empty', status=status_code.NO_CONTENT)
                 else:
@@ -76,20 +80,20 @@ def main():
         
     @app.route('/api/users/<int:id>', methods=['GET', 'DELETE']) #type: ignore
     def return_user_with_id(id):
-        #if sec.check_cookie(request.cookies, 'admin'):
-        if request.method == 'GET':
-            try:
-                return jsonify(database.see_user(id=id))
-            except ValueError:
-                return Response('User not found', status=status_code.NO_CONTENT)
-        elif request.method == 'DELETE':
-            try:
-                database.remove_user(id) #type: ignore
-                return Response('User was deleted', status=status_code.OK)
-            except ValueError:
-                return Response('User not found', status=status_code.NO_CONTENT)
-       # else:
-            #return Response('Unauthorized Acess', status=status_code.UNAUTHORIZED)
+        if database.check_id(request.cookies, id):
+            if request.method == 'GET':
+                try:
+                    return jsonify(database.return_user_data(id=id))
+                except ValueError:
+                    return Response('User not found', status=status_code.NO_CONTENT)
+            elif request.method == 'DELETE':
+                try:
+                    database.remove_user(id) #type: ignore
+                    return Response('User was deleted', status=status_code.OK)
+                except ValueError:
+                    return Response('User not found', status=status_code.NO_CONTENT)
+        else:
+            return Response('Unauthorized Acess', status=status_code.UNAUTHORIZED)
             
     @app.route('/auth/login')
     def login():
@@ -99,7 +103,7 @@ def main():
         acesso = data['acesso'] #type: ignore
 
         try:
-            database.see_user(name=name, passwd=passwd)
+            database.login_user(name, passwd)
         except ValueError:
             return Response('User not found', status=status_code.NO_CONTENT)
         else:
@@ -108,11 +112,12 @@ def main():
             response.set_cookie('jwt_token', value=jwt_token)
             return response
         
-    @app.route('/teste/senha')
-    def teste():
-        name = request.args.get('name')
-        passwd = database.get_password(name)
-        return passwd
+    @app.route('/teste/<int:id>')
+    def teste(id):
+        if database.check_id(request.cookies, id):
+            return 'True'
+        else:
+            return 'False'
         
     @app.route('/auth/register', methods=['POST'])
     def register():
@@ -123,7 +128,7 @@ def main():
 
         if request.method == 'POST':
             if acesso == 'sudo':
-                if database.check_sudo():
+                if database.check_sudo_existence():
                     try:
                         database.create_user(name, passwd, 'sudo')
                     except ValueError:
@@ -135,7 +140,7 @@ def main():
             elif acesso == 'admin':
                 cookie = request.cookies
                 cookie = jwt.decode(cookie['jwt_token'], jwt_secret, algorithms='HS256')
-                if database.check_acess(cookie['name']) == 'sudo':
+                if database.check_acess_level(cookie['name']) == 'sudo':
                     try:
                         database.create_user(name, passwd, acesso)
                     except ValueError:

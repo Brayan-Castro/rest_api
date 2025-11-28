@@ -2,10 +2,12 @@ from flask import Flask, Response, make_response, jsonify
 from flask import request
 import modules.db_manager as database
 import modules.status as status_code
+import modules.user_manager as sec
 import jwt
 from dotenv import load_dotenv
 import os
 import datetime
+load_dotenv()
 app = Flask(__name__)
 jwt_secret = os.getenv('JWT_SECRET')
 """
@@ -35,20 +37,6 @@ Endpoints
 def main():
     @app.route("/api/users", methods=['GET', 'DELETE']) #type: ignore
     def return_users():
-        """
-        How to use?
-            Simply acess the endpoint (/api/users) with the desired HTTP Method, currently supports these methods:
-                [GET]
-                    Returns a JSON with the user data regarding all the users in this database, if the database is empty, it raises an HTTP Response with the code 204.
-                [POST]
-                    Tries to create a user on the database, requires and additional payload consisting of a JSON file containing a dict with the keys 'name' and 'passwd' with the content-type of 'application/json',
-                    on sucess, returns an HTTP Response with the code 201, on failure, returns an HTTP Response with the code 500.
-                    request example: session.post("http://127.0.0.1:5000/api/users", headers = {'Content-Type': 'application/json'}, data=json.dumps({'name': 'teste', 'passwd': 'teste', 'acesso': 'admin'}))
-                [DELETE]
-                    Tries to remove a user from the database, requires and additional payload consisting of a JSON file containing a dict with the keys 'name' and 'passwd' with the content-type of 'application/json',
-                    on sucess, returns an HTTP Response with the code 200, on failure, returns an HTTP Response with the code 204.
-                    request example: session.delete("http://127.0.0.1:5000/api/users", headers = {'Content-Type': 'application/json'}, data=json.dumps({'name': 'teste', 'passwd': 'teste'}))
-        """
         try:
             data = request.json
         except:
@@ -62,7 +50,7 @@ def main():
             try:
                 name #type: ignore
             except NameError:
-                if check_cookie(request.cookies, 'admin'):
+                if sec.check_cookie(request.cookies, 'admin'):
                     try:
                         return jsonify(database.see_user())
                     except ValueError:
@@ -75,7 +63,7 @@ def main():
                 except ValueError:
                     return Response('Database is Empty', status=status_code.NO_CONTENT)  
         elif request.method == 'DELETE':
-            if check_cookie(request.cookies, 'admin'):
+            if sec.check_cookie(request.cookies, 'admin'):
                 try:
                     database.remove_user(name, passwd) #type: ignore
                     return Response('User was deleted', status=status_code.OK)
@@ -88,20 +76,20 @@ def main():
         
     @app.route('/api/users/<int:id>', methods=['GET', 'DELETE']) #type: ignore
     def return_user_with_id(id):
-        if check_cookie(request.cookies, 'admin'):
-            if request.method == 'GET':
-                try:
-                    return jsonify(database.see_user(id=id))
-                except ValueError:
-                    return Response('User not found', status=status_code.NO_CONTENT)
-            elif request.method == 'DELETE':
-                try:
-                    database.remove_user(id) #type: ignore
-                    return Response('User was deleted', status=status_code.OK)
-                except ValueError:
-                    return Response('User not found', status=status_code.NO_CONTENT)
-        else:
-            return Response('Unauthorized Acess', status=status_code.UNAUTHORIZED)
+        #if sec.check_cookie(request.cookies, 'admin'):
+        if request.method == 'GET':
+            try:
+                return jsonify(database.see_user(id=id))
+            except ValueError:
+                return Response('User not found', status=status_code.NO_CONTENT)
+        elif request.method == 'DELETE':
+            try:
+                database.remove_user(id) #type: ignore
+                return Response('User was deleted', status=status_code.OK)
+            except ValueError:
+                return Response('User not found', status=status_code.NO_CONTENT)
+       # else:
+            #return Response('Unauthorized Acess', status=status_code.UNAUTHORIZED)
             
     @app.route('/auth/login')
     def login():
@@ -119,6 +107,12 @@ def main():
             jwt_token = jwt.encode({'name': name, 'acesso': acesso}, jwt_secret, algorithm='HS256')
             response.set_cookie('jwt_token', value=jwt_token)
             return response
+        
+    @app.route('/teste/senha')
+    def teste():
+        name = request.args.get('name')
+        passwd = database.get_password(name)
+        return passwd
         
     @app.route('/auth/register', methods=['POST'])
     def register():
@@ -169,16 +163,5 @@ def main():
     def create():
         database.create_table()
         return 'done'
-    
-def check_cookie(cookie, acess_req):
-    token = jwt.decode(cookie['jwt_token'], jwt_secret, algorithms='HS256')
-    if token['acesso'] == acess_req or token['acesso'] == 'sudo':
-        return True
-    else:
-        return False
-    
-def check_identity(cookie, id):
-    token = jwt.decode(cookie['jwt_token'], jwt_secret, algorithms='HS256')
-    return f'{database.check_identity(token['name'])}'
 
 main()

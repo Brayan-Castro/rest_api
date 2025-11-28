@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import pymysql
 import os
+import modules.user_manager as sec
 load_dotenv(dotenv_path='./.env')
 
 _TABLE_NAME = "rest_table"
@@ -28,6 +29,7 @@ def create_table():
         with con.cursor() as cur:
             cur.execute(f"CREATE TABLE IF NOT EXISTS {_TABLE_NAME} (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, acesso VARCHAR(255) NOT NULL)")
 
+@sec.hash_passwd
 def create_user(name:str, passwd:str, acesso:str):
     # /users with [POST]
     with sql_connection() as con:
@@ -87,6 +89,17 @@ def see_user(id = 0, name = '', passwd = ''):
                 else:
                     raise ValueError('Database is empty')
                 
+def get_password(name:str):
+    with sql_connection() as con:
+        with con.cursor() as cur:
+            cur.execute(f'SELECT password FROM {_TABLE_NAME} WHERE username = %s', (name))
+            try:
+                passwd = cur.fetchone()[0] #type: ignore
+            except TypeError:
+                raise ValueError('User was not found')
+            else:
+                return passwd
+
 def check_identity(name):
     with sql_connection() as con:
         with con.cursor() as cur:
